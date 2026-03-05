@@ -1,15 +1,14 @@
 const express=require("express")
-const cors = require("cors")
 const bcrypt=require("bcrypt")
 const jwt=require("jsonwebtoken")
+const path = require("path")
 
 const db = require("./db")
 
 const app = express()
 app.use(express.json())
-app.use(cors())
 
-app.post("/register",(req,res)=>{
+app.post("/api/register",(req,res)=>{
     const {username,password} = req.body
     const query=`SELECT * FROM users WHERE username=?`
     db.get(query,[username],async (err,row)=>{
@@ -33,7 +32,7 @@ app.post("/register",(req,res)=>{
     })
 })
 
-app.post("/login",(req,res)=>{
+app.post("/api/login",(req,res)=>{
     const {username,password} = req.body
     const query=`SELECT * FROM users WHERE username=?`
     db.get(query,[username],async (err,row)=>{
@@ -58,7 +57,7 @@ app.post("/login",(req,res)=>{
     })
 })
 
-app.post("/products",(req,res)=>{
+app.post("/api/products",(req,res)=>{
     const {title,brand,id,rating,image_url,price} = req.body
     console.log(title)
     if (!title || !brand || !id || !rating || !image_url || !price){
@@ -78,7 +77,7 @@ app.post("/products",(req,res)=>{
     })
 })
 
-app.post("/products/bulk",(req,res)=>{
+app.post("/api/products/bulk",(req,res)=>{
     const products=req.body.products
     const productData=products.map(()=>"(?, ?, ?, ?, ?, ?)").join(",")
     const values = products.flatMap(p=>[p.title, p.brand, p.price, p.id, p.image_url, p.rating])
@@ -96,7 +95,7 @@ app.post("/products/bulk",(req,res)=>{
     })
 })
 
-app.post("/productsList/bulk",(req,res)=>{
+app.post("/api/productsList/bulk",(req,res)=>{
     const products=req.body.products
     const productData=products.map(()=>"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").join(",")
     const values = products.flatMap(p=>[p.id, p.title, p.description, p.category, p.price, p.rating, p.stock, p.brand, p.availabilityStatus, p.images[0]])
@@ -128,7 +127,7 @@ app.post("/productsList/bulk",(req,res)=>{
 //     })
 // })
 
-app.delete("/productsList",(req,res)=>{
+app.delete("/api/productsList",(req,res)=>{
     const query = `DELETE FROM productsList`
     db.run(query,[],(err)=>{
         if (err){
@@ -142,7 +141,7 @@ app.delete("/productsList",(req,res)=>{
     })
 })
 
-app.get("/products",(req,res)=>{
+app.get("/api/products",(req,res)=>{
     const {order_by="PRICE_HIGH",category="",title_search="",rating="1"} = req.query
     const order = order_by === "PRICE_HIGH" ? "DESC" : "ASC"
     const rating1=parseInt(rating)
@@ -159,7 +158,7 @@ app.get("/products",(req,res)=>{
     })
 })
 
-app.get("/productsList",(req,res)=>{
+app.get("/api/productsList",(req,res)=>{
     const {order_by="PRICE_HIGH",category="",title_search="",rating=1} = req.query
     const order = order_by === "PRICE_HIGH" ? "DESC" : "ASC"
     const query=`SELECT * FROM productsList WHERE category LIKE ? AND title LIKE ? AND rating > ? ORDER BY price ${order}`
@@ -175,7 +174,7 @@ app.get("/productsList",(req,res)=>{
     })
 })
 
-app.get("/productsList/:id",(req,res)=>{
+app.get("/api/productsList/:id",(req,res)=>{
     const {id} = req.params
 
     const query = `SELECT * FROM productsList WHERE id = ?`
@@ -198,7 +197,7 @@ app.get("/productsList/:id",(req,res)=>{
     })
 })
 
-app.get("/products/prime",(req,res)=>{
+app.get("/api/products/prime",(req,res)=>{
     const query =`SELECT * FROM products WHERE image_url LIKE ? ORDER BY price DESC LIMIT 3`
     db.all(query,[`%${'clothes'}%`],(err,rows)=>{
         if (err){
@@ -210,10 +209,10 @@ app.get("/products/prime",(req,res)=>{
     })
 })
 
-app.delete("/products/:id",(req,res)=>{
+app.delete("/api/products/:id",(req,res)=>{
     const {id}=req.params
     const query=`DELETE FROM products WHERE id=?`
-    db.run(query,[id],(err)=>{
+    db.run(query,[id],function (err) {
         if (err){
             return res.status(400).json({
                 error_msg:err.message
@@ -230,7 +229,7 @@ app.delete("/products/:id",(req,res)=>{
     })
 })
 
-app.delete("/products",(req,res)=>{
+app.delete("/api/products",(req,res)=>{
     const query = `DELETE FROM products`
     db.run(query,[],(err)=>{
         if (err){
@@ -243,10 +242,15 @@ app.delete("/products",(req,res)=>{
         })
     })
 })
-app.listen(5000, (err)=>{
-    if (err){
-        console.log(`error : ${err.message}`)
-    }else{
-        console.log("server is running at 5000")
-    }
+
+app.use(express.static(path.join(__dirname, "../client/dist")))
+
+app.use((req, res) => {
+  res.sendFile(path.join(__dirname, "../client/dist/index.html"))
+})
+
+const PORT = process.env.PORT || 5000
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
 })

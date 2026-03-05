@@ -119,7 +119,7 @@ class AllProductsSection extends Component {
     // } = this.state
     const {activeCategoryId,activeRatingId,activeOptionId,searchInput} = this.state
     // console.log(activeCategoryId)
-    const apiUrl = `http://localhost:5000/productsList?category=${activeCategoryId}&title_search=${searchInput}&rating=${activeRatingId}&order_by=${activeOptionId}`
+    const apiUrl = `/api/productsList?category=${activeCategoryId}&title_search=${searchInput}&rating=${activeRatingId}&order_by=${activeOptionId}`
     const options = {
       headers: {
         Authorization: `Bearer ${jwtToken}`

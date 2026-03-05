@@ -40,7 +40,7 @@ class Login extends Component {
         return this.setState({showSubmitError:true,errorMsg:"username and password are not empty"})
     }
     const userDetails = {username, password}
-    const url = 'http://localhost:5000/login'
+    const url = '/api/login'
     const options = {
       method: 'POST',
       headers : {

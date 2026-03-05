@@ -29,7 +29,7 @@ class PrimeDealsSection extends Component {
 
     const jwtToken = Cookies.get('jwt_token')
 
-    const apiUrl = 'http://localhost:5000/products/prime'
+    const apiUrl = '/api/products/prime'
     const options = {
       headers: {
         Authorization: `Bearer ${jwtToken}`,

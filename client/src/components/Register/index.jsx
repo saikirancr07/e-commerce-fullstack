@@ -44,7 +44,7 @@ class Register extends Component {
         return this.setState({showSubmitError:true,errorMsg:"username and password are not empty"})
     }
     const userDetails = {username, password}
-    const url = 'http://localhost:5000/register'
+    const url = '/api/register'
     const options = {
       method: 'POST',
       headers : {
