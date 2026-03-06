@@ -243,6 +243,10 @@ app.delete("/api/products",(req,res)=>{
     })
 })
 
+app.get("/ping", (req, res) => {
+  res.send("Server is awake 🚀");
+});
+
 app.use(express.static(path.join(__dirname, "../client/dist")))
 
 app.use((req, res) => {
