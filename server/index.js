@@ -1,3 +1,4 @@
+
 const express=require("express")
 const bcrypt=require("bcrypt")
 const jwt=require("jsonwebtoken")
@@ -57,45 +58,71 @@ app.post("/api/login",(req,res)=>{
     })
 })
 
-app.post("/api/products",(req,res)=>{
-    const {title,brand,id,rating,image_url,price} = req.body
-    console.log(title)
-    if (!title || !brand || !id || !rating || !image_url || !price){
-        console.log("all fields required")
-    }
-    const query = `INSERT INTO products (title,brand,price,id,image_url,rating) values (?, ?, ?, ?, ?, ?)`
-    db.run(query,[title,brand,price,id,image_url,rating],(err)=>{
-        if (err){
-            console.log("error")
-            return res.status(500).json({
-                error : err.message
-            })
-        }
-        res.status(200).json({
-            message : "product inserted successfully"
+function authenticateToken(req,res,next){
+    const authHeader = req.headers["authorization"]
+    const token = authHeader &&  authHeader.split(" ")[1]
+    if (!token){
+        return res.status(400).json({
+            message : "JWTtoken required"
         })
-    })
-})
-
-app.post("/api/products/bulk",(req,res)=>{
-    const products=req.body.products
-    const productData=products.map(()=>"(?, ?, ?, ?, ?, ?)").join(",")
-    const values = products.flatMap(p=>[p.title, p.brand, p.price, p.id, p.image_url, p.rating])
-    const query = `INSERT INTO products (title,brand,price,id,image_url,rating) values ${productData}`
-    db.run(query,values,function(err){
+    }
+    
+    jwt.verify(token,"saikiran",(err,payload)=>{
         if (err){
             return res.status(400).json({
-                error : err.message
+                message : "JWTtoken invalid"
             })
         }
-        res.status(200).json({
-            inserted : this.changes,
-            message : "success"
-        })
+        else{
+            req.username=payload.username
+            next()
+        }
     })
-})
+    
+}
 
-app.post("/api/productsList/bulk",(req,res)=>{
+// app.post("/api/products",authenticateToken,(req,res)=>{
+//     const {title,brand,id,rating,image_url,price} = req.body
+//     console.log(title)
+//     if (!title || !brand || !id || !rating || !image_url || !price){
+//         console.log("all fields required")
+//         return res.status(400).json({
+//             message : "all fields required"
+//         })
+//     }
+//     const query = `INSERT INTO products (title,brand,price,id,image_url,rating) values (?, ?, ?, ?, ?, ?)`
+//     db.run(query,[title,brand,price,id,image_url,rating],(err)=>{
+//         if (err){
+//             console.log("error")
+//             return res.status(500).json({
+//                 error : err.message
+//             })
+//         }
+//         res.status(200).json({
+//             message : "product inserted successfully"
+//         })
+//     })
+// })
+
+// app.post("/api/products/bulk",authenticateToken,(req,res)=>{
+//     const products=req.body.products
+//     const productData=products.map(()=>"(?, ?, ?, ?, ?, ?)").join(",")
+//     const values = products.flatMap(p=>[p.title, p.brand, p.price, p.id, p.image_url, p.rating])
+//     const query = `INSERT INTO products (title,brand,price,id,image_url,rating) values ${productData}`
+//     db.run(query,values,function(err){
+//         if (err){
+//             return res.status(400).json({
+//                 error : err.message
+//             })
+//         }
+//         res.status(200).json({
+//             inserted : this.changes,
+//             message : "success"
+//         })
+//     })
+// })
+
+app.post("/api/productsList/bulk",authenticateToken,(req,res)=>{
     const products=req.body.products
     const productData=products.map(()=>"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").join(",")
     const values = products.flatMap(p=>[p.id, p.title, p.description, p.category, p.price, p.rating, p.stock, p.brand, p.availabilityStatus, p.images[0]])
@@ -113,7 +140,7 @@ app.post("/api/productsList/bulk",(req,res)=>{
     })
 })
 
-// app.get("/productsList",(req,res)=>{
+// app.get("/productsList",authenticateToken,(req,res)=>{
 //     const query = `SELECT * FROM productsList`
 //     db.all(query,[],(err,rows)=>{
 //         if (err){
@@ -127,7 +154,7 @@ app.post("/api/productsList/bulk",(req,res)=>{
 //     })
 // })
 
-app.delete("/api/productsList",(req,res)=>{
+app.delete("/api/productsList",authenticateToken,(req,res)=>{
     const query = `DELETE FROM productsList`
     db.run(query,[],(err)=>{
         if (err){
@@ -141,24 +168,24 @@ app.delete("/api/productsList",(req,res)=>{
     })
 })
 
-app.get("/api/products",(req,res)=>{
-    const {order_by="PRICE_HIGH",category="",title_search="",rating="1"} = req.query
-    const order = order_by === "PRICE_HIGH" ? "DESC" : "ASC"
-    const rating1=parseInt(rating)
-    const query=`SELECT * FROM products WHERE image_url LIKE ? AND title LIKE ? AND rating > ? ORDER BY price ${order}`
-    db.all(query,[`%${category}%`,`%${title_search}%`,rating1],(err,rows)=>{
-        if (err){
-            return res.status(400).json({
-                error_msg : err.message
-            })
-        }
-        res.status(200).json({
-            products : rows
-        })
-    })
-})
+// app.get("/api/products",authenticateToken,(req,res)=>{
+//     const {order_by="PRICE_HIGH",category="",title_search="",rating="1"} = req.query
+//     const order = order_by === "PRICE_HIGH" ? "DESC" : "ASC"
+//     const rating1=parseInt(rating)
+//     const query=`SELECT * FROM products WHERE image_url LIKE ? AND title LIKE ? AND rating > ? ORDER BY price ${order}`
+//     db.all(query,[`%${category}%`,`%${title_search}%`,rating1],(err,rows)=>{
+//         if (err){
+//             return res.status(400).json({
+//                 error_msg : err.message
+//             })
+//         }
+//         res.status(200).json({
+//             products : rows
+//         })
+//     })
+// })
 
-app.get("/api/productsList",(req,res)=>{
+app.get("/api/productsList",authenticateToken,(req,res)=>{
     const {order_by="PRICE_HIGH",category="",title_search="",rating=1} = req.query
     const order = order_by === "PRICE_HIGH" ? "DESC" : "ASC"
     const query=`SELECT * FROM productsList WHERE category LIKE ? AND title LIKE ? AND rating > ? ORDER BY price ${order}`
@@ -174,7 +201,7 @@ app.get("/api/productsList",(req,res)=>{
     })
 })
 
-app.get("/api/productsList/:id",(req,res)=>{
+app.get("/api/productsList/:id",authenticateToken,(req,res)=>{
     const {id} = req.params
 
     const query = `SELECT * FROM productsList WHERE id = ?`
@@ -184,7 +211,13 @@ app.get("/api/productsList/:id",(req,res)=>{
                 error_msg : err.message
             })
         }
+        if (!rows){
+            return res.status(400).json({
+                message : "product not found"
+            })
+        }
         const category = rows.category
+
         const query1 = `SELECT * FROM productsList WHERE category = ?`
         db.all(query1,[category],(err,rows)=>{
             if (err){
@@ -197,9 +230,16 @@ app.get("/api/productsList/:id",(req,res)=>{
     })
 })
 
-app.get("/api/products/prime",(req,res)=>{
-    const query =`SELECT * FROM products WHERE image_url LIKE ? ORDER BY price DESC LIMIT 3`
-    db.all(query,[`%${'clothes'}%`],(err,rows)=>{
+app.get("/api/products/prime",authenticateToken,(req,res)=>{
+    const username = req.username
+    if (username!=="chintu"){
+        console.log("you are not a prime subscriber")
+        return res.status(400).json({
+            message : "you are not a prime subscribe"
+        })
+    }
+    const query =`SELECT * FROM productsList WHERE category = ? ORDER BY rating DESC LIMIT 3`
+    db.all(query,["mens-shirts"],(err,rows)=>{
         if (err){
             return res.status(400).json({
                 error_msg : err.message
@@ -209,37 +249,76 @@ app.get("/api/products/prime",(req,res)=>{
     })
 })
 
-app.delete("/api/products/:id",(req,res)=>{
-    const {id}=req.params
-    const query=`DELETE FROM products WHERE id=?`
+app.delete("/api/productsList/:id",(req,res)=>{
+    const {id} = req.params
+    const query = `DELETE FROM productsList WHERE id = ?`
     db.run(query,[id],function (err) {
         if (err){
             return res.status(400).json({
-                error_msg:err.message
+                error_msg : err.message
             })
         }
-        if (this.changes===0){
+        if (this.change===0){
             return res.status(400).json({
                 message : "id not found"
             })
         }
         res.status(200).json({
-            message : "deleted succesfully"
+            message : "product deleted successfully"
         })
     })
 })
 
-app.delete("/api/products",(req,res)=>{
-    const query = `DELETE FROM products`
-    db.run(query,[],(err)=>{
+// app.delete("/api/products/:id",authenticateToken,(req,res)=>{
+//     const {id}=req.params
+//     const query=`DELETE FROM products WHERE id=?`
+//     db.run(query,[id],function (err) {
+//         if (err){
+//             return res.status(400).json({
+//                 error_msg:err.message
+//             })
+//         }
+//         if (this.changes===0){
+//             return res.status(400).json({
+//                 message : "id not found"
+//             })
+//         }
+//         res.status(200).json({
+//             message : "deleted succesfully"
+//         })
+//     })
+// })
+
+// app.delete("/api/products",authenticateToken,(req,res)=>{
+//     const query = `DELETE FROM products`
+//     db.run(query,[],(err)=>{
+//         if (err){
+//             return res.status(400).json({
+//                 error_msg : "failed to delete all products"
+//             })
+//         }
+//         res.status(200).json({
+//             message : "all products delete successfully"
+//         })
+//     })
+// })
+
+app.delete("/api/users",(req,res)=>{
+    const query =`DELETE FROM users WHERE username = ?`
+    db.run(query,["chintu"],function(err){
         if (err){
             return res.status(400).json({
-                error_msg : "failed to delete all products"
+                error_msg : err.message
             })
         }
-        res.status(200).json({
-            message : "all products delete successfully"
+    })
+    if (this.changes===0){
+        return res.status(400).json({
+            message : "username not  found"
         })
+    }
+    res.status(200).json({
+        message : "username deleted from users table"
     })
 })
 

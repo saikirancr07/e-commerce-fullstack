@@ -44,7 +44,7 @@ class PrimeDealsSection extends Component {
         brand: product.brand,
         price: product.price,
         id: product.id,
-        imageUrl: product.image_url,
+        imageUrl: product.thumbnail,
         rating: product.rating,
       }))
       this.setState({

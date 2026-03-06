@@ -133,8 +133,8 @@ class Login extends Component {
           <button type="button" className="user-credentials">
             User Credentials
           </button>
-          <p className="user-name">username : rahul</p>
-          <p className="password">password : rahul@2021</p>
+          <p className="user-name">username : chintu</p>
+          <p className="password">password : chintu@123</p>
         </div>
       </div>
     )
