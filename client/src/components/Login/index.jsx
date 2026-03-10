@@ -3,6 +3,7 @@ import Cookies from 'js-cookie'
 import {Navigate} from 'react-router-dom'
 
 import './index.css'
+import withRouter from '../WithRouter'
 
 class Login extends Component {
   state = {
@@ -25,6 +26,7 @@ class Login extends Component {
       expires: 30,
       path: '/',
     })
+    return <Navigate to="/" replace />
   }
 
   onSubmitFailure = errorMsg => {
@@ -131,7 +133,7 @@ class Login extends Component {
             {showSubmitError && <p className="error-message">*{errorMsg}</p>}
           </form>
           <button type="button" className="user-credentials">
-            User Credentials
+            Demo Credentials
           </button>
           <p className="user-name">username : chintu</p>
           <p className="password">password : chintu@123</p>
@@ -141,4 +143,6 @@ class Login extends Component {
   }
 }
 
-export default Login
+const loginWithRouter = withRouter(Login)
+
+export default loginWithRouter
